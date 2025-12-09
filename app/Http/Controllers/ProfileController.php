@@ -10,7 +10,7 @@ use App\Models\OrderItem;
 class ProfileController extends Controller
 {
     /**
-     * Show the user's profile page.
+     * Tampilkan halaman profil user
      */
     public function show()
     {
@@ -24,30 +24,30 @@ class ProfileController extends Controller
     }
 
     /**
-     * Show the form for editing the user's profile.
+     * Tampilkan form edit profil user
      */
     public function edit($id)
     {
         $user = Auth::user();
         
-        // Ensure user can only edit their own profile
+        // Pastikan user hanya bisa edit profil mereka sendiri
         if ($user->id != $id) {
-            return redirect()->route('profile.show')->with('error', 'Unauthorized access');
+            return redirect()->route('profile.show')->with('error', 'Akses tidak diizinkan');
         }
         
         return view('profile-edit', compact('user'));
     }
 
     /**
-     * Update the user's profile.
+     * Perbarui profil user
      */
     public function update(Request $request, $id)
     {
         $user = Auth::user();
         
-        // Ensure user can only update their own profile
+        // Pastikan user hanya bisa update profil mereka sendiri
         if ($user->id != $id) {
-            return redirect()->route('profile.show')->with('error', 'Unauthorized access');
+            return redirect()->route('profile.show')->with('error', 'Akses tidak diizinkan');
         }
         
         $validated = $request->validate([
@@ -56,18 +56,18 @@ class ProfileController extends Controller
             'alamat' => 'nullable|string|max:500',
         ]);
         
-        // Filter out null values and update
+        // Filter nilai null dan update
         $updateData = array_filter($validated, fn($value) => !is_null($value));
         
         if (!empty($updateData)) {
             $user->update($updateData);
         }
         
-        return redirect()->route('profile.show')->with('success', 'Profile updated successfully!');
+        return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui!');
     }
 
     /**
-     * List user's orders.
+     * Daftar pesanan user
      */
     public function orders()
     {
@@ -77,16 +77,16 @@ class ProfileController extends Controller
     }
 
     /**
-     * Re-order a past order (creates a new order copying items).
+     * Buat ulang pesanan lama (membuat pesanan baru dengan copy item)
      */
     public function reorder(Order $order)
     {
         $user = Auth::user();
         if ($order->user_id !== $user->id) {
-            return back()->with('error', 'Unauthorized');
+            return back()->with('error', 'Tidak diizinkan');
         }
 
-        // Create a new order (basic, without payment processing)
+        // Buat pesanan baru (tanpa proses pembayaran)
         $newOrder = Order::create([
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
             'user_id' => $user->id,

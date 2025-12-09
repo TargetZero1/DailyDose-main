@@ -62,7 +62,7 @@ class CustomizationController extends Controller
 
         $options = $customization->options ?? [];
         if (!is_array($options)) {
-            return back()->with('error', 'Customization options are not in expected format');
+            return back()->with('error', 'Opsi kustomisasi tidak dalam format yang diharapkan');
         }
 
         $created = 0;

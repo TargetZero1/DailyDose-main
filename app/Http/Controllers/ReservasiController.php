@@ -9,14 +9,14 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ReservasiController extends Controller
 {
-    // Define seating area capacities
+    // Tentukan kapasitas setiap area tempat duduk
     private $areaCapacities = [
         'Indoor' => 50,
         'Outdoor' => 40,
         'VIP Room' => 20,
     ];
 
-    // Time slots to check (in 30-minute intervals)
+    // Slot waktu yang tersedia (interval 30 menit)
     private $timeSlots = [
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
@@ -36,7 +36,7 @@ class ReservasiController extends Controller
     }
 
     /**
-     * Check availability of time slots for a specific date and area
+     * Cek ketersediaan slot waktu untuk tanggal dan area tertentu
      */
     public function checkAvailability(Request $request)
     {
@@ -79,7 +79,7 @@ class ReservasiController extends Controller
         try {
             // Prevent admins from making reservations
             if (Auth::check() && (Auth::user()->role === 'admin' || Auth::user()->role === 'pemilik')) {
-                return back()->with('error', 'Admins cannot make reservations');
+                return back()->with('error', 'Admin tidak dapat membuat reservasi');
             }
 
             $request->validate([
@@ -128,7 +128,7 @@ class ReservasiController extends Controller
             return redirect()->route('reservasi.confirmation', $reservasi->id);
         } catch (\Exception $e) {
             \Log::error('Error creating reservation: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Failed to create reservation. Please try again.');
+            return back()->withInput()->with('error', 'Gagal membuat reservasi. Coba lagi.');
         }
     }
 

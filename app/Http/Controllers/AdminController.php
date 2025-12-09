@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Auth;
 class AdminController extends Controller
 {
     /**
-     * Show admin dashboard.
+     * Tampilkan dashboard admin
      */
     public function dashboard()
     {
         try {
-            // Only allow admin and pemilik roles
+            // Hanya izinkan role admin dan pemilik
             if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
-                abort(403, 'Unauthorized');
+                abort(403, 'Tidak diizinkan');
             }
 
             $stats = [
@@ -40,7 +40,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Show products management page.
+     * Tampilkan halaman pengelolaan produk
      */
     public function products()
     {
@@ -84,7 +84,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Show create product form.
+     * Tampilkan form tambah produk baru
      */
     public function createProduct()
     {
@@ -124,7 +124,7 @@ class AdminController extends Controller
 
             Product::create($validated);
 
-            return redirect()->route('admin.products')->with('success', 'Product created successfully!');
+            return redirect()->route('admin.products')->with('success', 'Produk berhasil dibuat!');
         } catch (\Exception $e) {
             \Log::error('Error creating product: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to create product. Please try again.');
@@ -172,10 +172,10 @@ class AdminController extends Controller
 
             $product->update($validated);
 
-            return redirect()->route('admin.products')->with('success', 'Product updated successfully!');
+            return redirect()->route('admin.products')->with('success', 'Produk berhasil diperbarui!');
         } catch (\Exception $e) {
             \Log::error('Error updating product: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Failed to update product. Please try again.');
+            return back()->withInput()->with('error', 'Gagal memperbarui produk. Coba lagi.');
         }
     }
 
@@ -206,7 +206,7 @@ class AdminController extends Controller
 
             $product->delete();
 
-            return back()->with('success', 'Product deleted successfully!');
+            return back()->with('success', 'Produk berhasil dihapus!');
         } catch (\Exception $e) {
             \Log::error('Error deleting product: ' . $e->getMessage());
             return back()->with('error', 'Failed to delete product. It may be referenced in orders.');

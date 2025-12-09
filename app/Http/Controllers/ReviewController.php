@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class ReviewController extends Controller
 {
     /**
-     * Store a newly created review.
+     * Simpan review baru
      */
     public function store(Request $request)
     {
@@ -20,21 +20,21 @@ class ReviewController extends Controller
             'comment' => 'nullable|string|max:1000',
         ]);
 
-        // Check if user already reviewed this product
+        // Cek apakah user sudah review produk ini
         $existingReview = Review::where('product_id', $request->product_id)
             ->where('user_id', Auth::id())
             ->first();
 
         if ($existingReview) {
-            // Update existing review
+            // Update review yang sudah ada
             $existingReview->update([
                 'rating' => $request->rating,
                 'comment' => $request->comment,
             ]);
-            return back()->with('success', 'Review updated successfully!');
+            return back()->with('success', 'Review berhasil diperbarui!');
         }
 
-        // Create new review
+        // Buat review baru
         Review::create([
             'product_id' => $request->product_id,
             'user_id' => Auth::id(),
@@ -42,33 +42,33 @@ class ReviewController extends Controller
             'comment' => $request->comment,
         ]);
 
-        return back()->with('success', 'Review added successfully!');
+        return back()->with('success', 'Review berhasil ditambahkan!');
     }
 
     /**
-     * Delete a review.
+     * Hapus review
      */
     public function destroy(Review $review)
     {
         if ($review->user_id !== Auth::id()) {
-            return back()->with('error', 'Unauthorized action');
+            return back()->with('error', 'Aksi tidak diizinkan');
         }
 
         $review->delete();
-        return back()->with('success', 'Review deleted successfully!');
+        return back()->with('success', 'Review berhasil dihapus!');
     }
 
     /**
-     * Mark review as helpful.
+     * Tandai review sebagai membantu
      */
     public function markHelpful(Review $review)
     {
         $review->increment('helpful_count');
-        return back()->with('success', 'Thank you for your feedback!');
+        return back()->with('success', 'Terima kasih atas masukan Anda!');
     }
 
     /**
-     * Get reviews for a product (AJAX).
+     * Ambil review untuk produk (AJAX)
      */
     public function getProductReviews(Product $product)
     {

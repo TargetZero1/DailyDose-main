@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class PromotionController extends Controller
 {
     /**
-     * Display all promotions.
+     * Tampilkan semua promosi
      */
     public function index()
     {
@@ -18,7 +18,7 @@ class PromotionController extends Controller
     }
 
     /**
-     * Show form for creating new promotion.
+     * Tampilkan form membuat promosi baru
      */
     public function create()
     {
@@ -27,7 +27,7 @@ class PromotionController extends Controller
     }
 
     /**
-     * Store a newly created promotion.
+     * Simpan promosi baru yang dibuat
      */
     public function store(Request $request)
     {
@@ -46,7 +46,7 @@ class PromotionController extends Controller
 
         $data = $request->all();
 
-        // Handle banner image upload
+        // Tangani upload gambar banner
         if ($request->hasFile('banner_image')) {
             $path = $request->file('banner_image')->store('promotions', 'public');
             $data['banner_image'] = $path;
@@ -55,11 +55,11 @@ class PromotionController extends Controller
         Promotion::create($data);
 
         return redirect()->route('promotions.index')
-            ->with('success', 'Promotion created successfully!');
+            ->with('success', 'Promosi berhasil dibuat!');
     }
 
     /**
-     * Show form for editing promotion.
+     * Tampilkan form edit promosi
      */
     public function edit(Promotion $promotion)
     {
@@ -68,7 +68,7 @@ class PromotionController extends Controller
     }
 
     /**
-     * Update the specified promotion.
+     * Perbarui promosi yang ditentukan
      */
     public function update(Request $request, Promotion $promotion)
     {
@@ -87,7 +87,7 @@ class PromotionController extends Controller
 
         $data = $request->all();
 
-        // Handle banner image upload
+        // Tangani upload gambar banner
         if ($request->hasFile('banner_image')) {
             $path = $request->file('banner_image')->store('promotions', 'public');
             $data['banner_image'] = $path;
@@ -96,20 +96,20 @@ class PromotionController extends Controller
         $promotion->update($data);
 
         return redirect()->route('promotions.index')
-            ->with('success', 'Promotion updated successfully!');
+            ->with('success', 'Promosi berhasil diperbarui!');
     }
 
     /**
-     * Delete the specified promotion.
+     * Hapus promosi yang ditentukan
      */
     public function destroy(Promotion $promotion)
     {
         $promotion->delete();
-        return back()->with('success', 'Promotion deleted successfully!');
+        return back()->with('success', 'Promosi berhasil dihapus!');
     }
 
     /**
-     * Get active promotions for display.
+     * Ambil promosi aktif untuk ditampilkan
      */
     public function getActive()
     {
@@ -118,7 +118,7 @@ class PromotionController extends Controller
     }
 
     /**
-     * Toggle promotion active status.
+     * Toggle status promosi aktif
      */
     public function toggleActive(Promotion $promotion)
     {

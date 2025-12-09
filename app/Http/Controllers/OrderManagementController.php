@@ -32,7 +32,7 @@ class OrderManagementController extends BaseAdminController
     // ============ CART MANAGEMENT ============
 
     /**
-     * Get user's cart
+     * Ambil keranjang user
      */
     public function getCart()
     {
@@ -41,7 +41,7 @@ class OrderManagementController extends BaseAdminController
     }
 
     /**
-     * Show cart page
+     * Tampilkan halaman keranjang
      */
     public function showCart()
     {
@@ -173,9 +173,9 @@ class OrderManagementController extends BaseAdminController
     }
 
     /**
-     * Process checkout and create order
+     * Proses checkout dan buat pesanan
      */
-    public function processCheckout(Request $request)
+    public function checkout(Request $request)
     {
         $validated = $request->validate([
             'cart' => 'required|json',
@@ -199,7 +199,7 @@ class OrderManagementController extends BaseAdminController
         DB::beginTransaction();
 
         try {
-            // Create order
+            // Buat pesanan
             $order = Order::create([
                 'uuid' => Str::uuid(),
                 'user_id' => Auth::id(),
@@ -234,7 +234,7 @@ class OrderManagementController extends BaseAdminController
                 'items_count' => count($cart),
             ]);
 
-            return redirect()->route('orders.confirmation', $order)->with('success', 'Order placed successfully!');
+            return redirect()->route('orders.confirmation', $order)->with('success', 'Pesanan berhasil ditempatkan!');
         } catch (\Exception $e) {
             DB::rollBack();
             $this->logAction('Checkout Failed', ['error' => $e->getMessage()]);
@@ -272,9 +272,9 @@ class OrderManagementController extends BaseAdminController
     }
 
     /**
-     * Show order confirmation page
+     * Tampilkan halaman konfirmasi pesanan
      */
-    public function showConfirmation(Order $order)
+    public function confirmation(Order $order)
     {
         if ($order->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized');
@@ -285,9 +285,9 @@ class OrderManagementController extends BaseAdminController
     }
 
     /**
-     * Show payment page for order
+     * Tampilkan halaman pembayaran untuk pesanan
      */
-    public function showPayment(Order $order)
+    public function payment(Order $order)
     {
         if ($order->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized');
@@ -388,7 +388,7 @@ class OrderManagementController extends BaseAdminController
     // ============ HELPER METHODS ============
 
     /**
-     * Get or create user's cart
+     * Ambil atau buat keranjang user baru
      */
     private function getUserCart()
     {

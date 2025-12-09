@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class FavoriteController extends Controller
 {
     /**
-     * Toggle favorite status for a product.
+     * Toggle status favorit untuk produk
      */
     public function toggle(Product $product)
     {
@@ -22,7 +22,7 @@ class FavoriteController extends Controller
             $favorite->delete();
             return response()->json([
                 'status' => 'removed',
-                'message' => 'Removed from favorites',
+                'message' => 'Dihapus dari favorit',
             ]);
         }
 
@@ -33,12 +33,12 @@ class FavoriteController extends Controller
 
         return response()->json([
             'status' => 'added',
-            'message' => 'Added to favorites',
+            'message' => 'Ditambahkan ke favorit',
         ]);
     }
 
     /**
-     * Check if product is favorited.
+     * Cek apakah produk sudah di-favorit
      */
     public function checkFavorite(Product $product)
     {
@@ -52,7 +52,7 @@ class FavoriteController extends Controller
     }
 
     /**
-     * Get user's favorite products.
+     * Ambil favorit produk user
      */
     public function getUserFavorites()
     {
@@ -68,7 +68,7 @@ class FavoriteController extends Controller
     }
 
     /**
-     * Display user's wishlist page.
+     * Tampilkan halaman wishlist user
      */
     public function show()
     {

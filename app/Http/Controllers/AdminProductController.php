@@ -10,15 +10,15 @@ use Illuminate\Support\Facades\Cache;
 class AdminProductController extends Controller
 {
     /**
-     * Verify admin access
+     * Verifikasi akses admin
      */
     private function authorize()
     {
-        abort_if(Auth::user()->role !== 'admin', 403, 'Unauthorized');
+        abort_if(Auth::user()->role !== 'admin', 403, 'Tidak diizinkan');
     }
 
     /**
-     * Apply inventory filters
+     * Terapkan filter inventori
      */
     private function applyFilters($query, Request $request)
     {
@@ -39,7 +39,7 @@ class AdminProductController extends Controller
     }
 
     /**
-     * Get cached inventory stats
+     * Dapatkan statistik inventori dari cache
      */
     private function getInventoryStats()
     {
@@ -163,7 +163,7 @@ class AdminProductController extends Controller
     }
 
     /**
-     * Get products needing restock
+     * Ambil produk yang butuh restock
      */
     public function getRestockNeeded()
     {

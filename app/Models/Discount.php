@@ -37,40 +37,40 @@ class Discount extends Model
     ];
 
     /**
-     * Check if discount is valid
+     * Cek apakah diskon valid
      */
     public function isValid($subtotal = 0, $userId = null, $applicableTo = 'products')
     {
-        // Check if active
+        // Cek apakah aktif
         if (!$this->is_active) {
-            return ['valid' => false, 'message' => 'This discount code is not active'];
+            return ['valid' => false, 'message' => 'Kode diskon ini tidak aktif'];
         }
 
-        // Check applicable type
+        // Cek tipe yang berlaku
         if ($this->applicable_to !== 'both' && $this->applicable_to !== $applicableTo) {
-            return ['valid' => false, 'message' => 'This discount is not applicable to ' . $applicableTo];
+            return ['valid' => false, 'message' => 'Diskon ini tidak berlaku untuk ' . $applicableTo];
         }
 
-        // Check date validity
+        // Cek validitas tanggal
         $now = Carbon::now();
         if ($this->valid_from && $now->lt($this->valid_from)) {
-            return ['valid' => false, 'message' => 'This discount is not yet valid'];
+            return ['valid' => false, 'message' => 'Diskon ini belum berlaku'];
         }
         if ($this->valid_until && $now->gt($this->valid_until)) {
-            return ['valid' => false, 'message' => 'This discount has expired'];
+            return ['valid' => false, 'message' => 'Diskon ini sudah hangus'];
         }
 
-        // Check minimum purchase
+        // Cek pembelian minimum
         if ($subtotal < $this->min_purchase) {
-            return ['valid' => false, 'message' => 'Minimum purchase of Rp ' . number_format($this->min_purchase, 0, ',', '.') . ' required'];
+            return ['valid' => false, 'message' => 'Pembelian minimum Rp ' . number_format($this->min_purchase, 0, ',', '.') . ' diperlukan'];
         }
 
-        // Check usage limit
+        // Cek batas penggunaan
         if ($this->usage_limit && $this->usage_count >= $this->usage_limit) {
-            return ['valid' => false, 'message' => 'This discount code has reached its usage limit'];
+            return ['valid' => false, 'message' => 'Kode diskon ini telah mencapai batas penggunaan'];
         }
 
-        // Check per user limit
+        // Cek batas per user
         if ($userId && $this->per_user_limit) {
             $userUsage = \DB::table('discount_usage')
                 ->where('user_id', $userId)

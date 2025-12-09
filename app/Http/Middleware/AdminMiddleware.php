@@ -20,7 +20,7 @@ class AdminMiddleware
         }
 
         if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized access. Admin privileges required.');
+            abort(403, 'Akses tidak diizinkan. Diperlukan hak admin.');
         }
 
         return $next($request);

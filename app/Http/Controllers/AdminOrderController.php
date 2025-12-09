@@ -17,17 +17,17 @@ class AdminOrderController extends Controller
 {
 
     /**
-     * Verify admin access
+     * Verifikasi akses admin
      */
     private function authorize()
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized access. Admin privileges required.');
+            abort(403, 'Akses tidak diizinkan. Diperlukan hak admin.');
         }
     }
 
     /**
-     * Get optimized cached order statistics
+     * Dapatkan statistik pesanan dari cache teroptimasi
      */
     private function getOrderStats()
     {
@@ -62,7 +62,7 @@ class AdminOrderController extends Controller
     }
 
     /**
-     * Apply filters to order query with proper sanitization
+     * Terapkan filter ke query pesanan dengan sanitasi yang tepat
      */
     private function applyFilters($query, Request $request)
     {
@@ -301,10 +301,10 @@ class AdminOrderController extends Controller
         $startDate = $validated['start_date'] ?? now()->subDays(30)->format('Y-m-d');
         $endDate = $validated['end_date'] ?? now()->format('Y-m-d');
 
-        // Get order statistics
+        // Ambil statistik pesanan
         $stats = $this->getOrderStats();
 
-        // Get revenue trend data
+        // Ambil data tren pendapatan
         $revenueTrend = DB::table('orders')
             ->selectRaw('DATE(created_at) as date, COUNT(*) as order_count, SUM(total) as revenue')
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
@@ -313,14 +313,14 @@ class AdminOrderController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Get order status breakdown
+        // Ambil breakdown status pesanan
         $statusBreakdown = DB::table('orders')
             ->selectRaw('status, COUNT(*) as count')
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->groupBy('status')
             ->get();
 
-        // Get top products
+        // Ambil produk terbaik
         $topProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->selectRaw('products.id, products.name, COUNT(*) as sold_count, SUM(order_items.quantity) as total_quantity')

@@ -13,7 +13,7 @@ class OrderController extends Controller
 {
     private $whatsappNumber = '0882009759102'; // WhatsApp Business Number
 
-    // Create an order from checkout form
+    // Buat pesanan dari form checkout
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -70,7 +70,7 @@ class OrderController extends Controller
 
             $order = Order::create($orderData);
 
-            // Create order items
+            // Buat item pesanan
             foreach ($items as $item) {
                 $item_subtotal = ($item['harga'] ?? 0) * ($item['qty'] ?? 0);
                 OrderItem::create([
@@ -101,7 +101,7 @@ class OrderController extends Controller
             \Log::error('Order creation error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'error' => 'Failed to create order: ' . $e->getMessage()
+                'error' => 'Gagal membuat pesanan: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -275,12 +275,12 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         
-        // Verify the previous order belongs to the user
+        // Verifikasi pesanan sebelumnya milik user
         if ($previousOrder->user_id !== $user->id) {
-            return redirect()->route('menu')->with('error', 'Unauthorized access');
+            return redirect()->route('menu')->with('error', 'Akses tidak diizinkan');
         }
         
-        // Create a new order with same items
+        // Buat pesanan baru dengan item yang sama
         $newOrder = Order::create([
             'user_id' => $user->id,
             'total' => $previousOrder->total,
@@ -288,7 +288,7 @@ class OrderController extends Controller
             'notes' => $previousOrder->notes,
         ]);
         
-        // Copy items to new order
+        // Salin item ke pesanan baru
         foreach ($previousOrder->items as $item) {
             OrderItem::create([
                 'order_id' => $newOrder->id,
@@ -302,6 +302,6 @@ class OrderController extends Controller
             ]);
         }
         
-        return redirect()->route('orders.payment', $newOrder)->with('success', 'Order reordered successfully!');
+        return redirect()->route('orders.payment', $newOrder)->with('success', 'Pesanan berhasil dibuat ulang!');
     }
 }
