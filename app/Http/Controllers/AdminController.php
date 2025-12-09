@@ -16,22 +16,27 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        // Only allow admin and pemilik roles
-        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
-            abort(403, 'Unauthorized');
+        try {
+            // Only allow admin and pemilik roles
+            if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
+                abort(403, 'Unauthorized');
+            }
+
+            $stats = [
+                'total_products' => Product::count(),
+                'total_orders' => Order::count(),
+                'total_users' => User::count(),
+                'total_reservations' => Reservasi::count(),
+                'revenue' => Order::sum('total'),
+                'recent_orders' => Order::with('user')->latest()->limit(5)->get(),
+                'popular_products' => Product::orderBy('sale_count', 'desc')->limit(5)->get(),
+            ];
+
+            return view('admin.dashboard', $stats);
+        } catch (\Exception $e) {
+            \Log::error('Error loading admin dashboard: ' . $e->getMessage());
+            return redirect()->route('home')->with('error', 'Failed to load admin dashboard');
         }
-
-        $stats = [
-            'total_products' => Product::count(),
-            'total_orders' => Order::count(),
-            'total_users' => User::count(),
-            'total_reservations' => Reservasi::count(),
-            'revenue' => Order::sum('total'),
-            'recent_orders' => Order::with('user')->latest()->limit(5)->get(),
-            'popular_products' => Product::orderBy('sale_count', 'desc')->limit(5)->get(),
-        ];
-
-        return view('admin.dashboard', $stats);
     }
 
     /**
@@ -95,30 +100,35 @@ class AdminController extends Controller
      */
     public function storeProduct(Request $request)
     {
-        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
-            abort(403, 'Unauthorized');
+        try {
+            if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
+                abort(403, 'Unauthorized');
+            }
+
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'required|integer|min:0',
+                'category' => 'required|string|max:50',
+                'stock' => 'required|integer|min:0',
+                'image' => 'nullable|image|max:2048',
+            ]);
+
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('products', 'public');
+                $validated['image'] = $path;
+            }
+
+            $validated['is_featured'] = $request->has('is_featured');
+            $validated['is_new'] = $request->has('is_new');
+
+            Product::create($validated);
+
+            return redirect()->route('admin.products')->with('success', 'Product created successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Error creating product: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create product. Please try again.');
         }
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|integer|min:0',
-            'category' => 'required|string|max:50',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|max:2048',
-        ]);
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image'] = $path;
-        }
-
-        $validated['is_featured'] = $request->has('is_featured');
-        $validated['is_new'] = $request->has('is_new');
-
-        Product::create($validated);
-
-        return redirect()->route('admin.products')->with('success', 'Product created successfully!');
     }
 
     /**
@@ -138,30 +148,35 @@ class AdminController extends Controller
      */
     public function updateProduct(Request $request, Product $product)
     {
-        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
-            abort(403, 'Unauthorized');
+        try {
+            if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
+                abort(403, 'Unauthorized');
+            }
+
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'required|integer|min:0',
+                'category' => 'required|string|max:50',
+                'stock' => 'required|integer|min:0',
+                'image' => 'nullable|image|max:2048',
+            ]);
+
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('products', 'public');
+                $validated['image'] = $path;
+            }
+
+            $validated['is_featured'] = $request->has('is_featured');
+            $validated['is_new'] = $request->has('is_new');
+
+            $product->update($validated);
+
+            return redirect()->route('admin.products')->with('success', 'Product updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Error updating product: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update product. Please try again.');
         }
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|integer|min:0',
-            'category' => 'required|string|max:50',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|max:2048',
-        ]);
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image'] = $path;
-        }
-
-        $validated['is_featured'] = $request->has('is_featured');
-        $validated['is_new'] = $request->has('is_new');
-
-        $product->update($validated);
-
-        return redirect()->route('admin.products')->with('success', 'Product updated successfully!');
     }
 
     /**
@@ -184,13 +199,18 @@ class AdminController extends Controller
      */
     public function deleteProduct(Product $product)
     {
-        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
-            abort(403, 'Unauthorized');
+        try {
+            if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'pemilik') {
+                abort(403, 'Unauthorized');
+            }
+
+            $product->delete();
+
+            return back()->with('success', 'Product deleted successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting product: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete product. It may be referenced in orders.');
         }
-
-        $product->delete();
-
-        return back()->with('success', 'Product deleted successfully!');
     }
 
     /**

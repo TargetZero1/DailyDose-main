@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\{Cart, CartItem};
 use App\Services\CartService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\{Auth, Log};
 
 class CartController extends Controller
 {
     /**
-     * Dapatkan keranjang belanja pengguna yang sedang login
+     * Dapatkan keranjang belanja user yang sedang login
      * 
      * @return Cart
      */
@@ -26,42 +26,52 @@ class CartController extends Controller
      */
     public function show()
     {
-        $cart = $this->getUserCart();
-        return response()->json(['cart' => $cart->load('items')]);
+        try {
+            $cart = $this->getUserCart();
+            return response()->json(['cart' => $cart->load('items')]);
+        } catch (\Exception $e) {
+            Log::error('Gagal memuat keranjang: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal memuat keranjang'], 500);
+        }
     }
 
     /**
-     * Tambah item ke keranjang belanja
+     * Tambah item ke keranjang
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function addItem(Request $request)
     {
-        $data = $request->validate([
-            'product_id' => 'nullable|exists:products,id',
-            'customization_id' => 'nullable|integer',
-            'name' => 'required|string',
-            'base_price' => 'required|integer',
-            'qty' => 'required|integer|min:1',
-            'subtotal' => 'required|integer',
-            'options' => 'nullable|array',
-        ]);
+        try {
+            $data = $request->validate([
+                'product_id' => 'nullable|exists:products,id',
+                'customization_id' => 'nullable|integer',
+                'name' => 'required|string',
+                'base_price' => 'required|integer',
+                'qty' => 'required|integer|min:1',
+                'subtotal' => 'required|integer',
+                'options' => 'nullable|array',
+            ]);
 
-        $cart = $this->getUserCart();
+            $cart = $this->getUserCart();
 
-        $item = CartItem::create([
-            'cart_id' => $cart->id,
-            'product_id' => $data['product_id'] ?? null,
-            'customization_id' => $data['customization_id'] ?? null,
-            'name' => $data['name'],
-            'base_price' => $data['base_price'],
-            'qty' => $data['qty'],
-            'subtotal' => $data['subtotal'],
-            'options' => $data['options'] ?? null,
-        ]);
+            $item = CartItem::create([
+                'cart_id' => $cart->id,
+                'product_id' => $data['product_id'] ?? null,
+                'customization_id' => $data['customization_id'] ?? null,
+                'name' => $data['name'],
+                'base_price' => $data['base_price'],
+                'qty' => $data['qty'],
+                'subtotal' => $data['subtotal'],
+                'options' => $data['options'] ?? null,
+            ]);
 
-        return response()->json(['status' => 'ok', 'item' => $item], 201);
+            return response()->json(['status' => 'ok', 'item' => $item], 201);
+        } catch (\Exception $e) {
+            Log::error('Gagal tambah item ke keranjang: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal menambah item'], 500);
+        }
     }
 
     /**
@@ -73,10 +83,10 @@ class CartController extends Controller
      */
     public function updateItem(Request $request, CartItem $item)
     {
-        // Verifikasi item milik pengguna
+        // Verifikasi item milik user
         $cart = $this->getUserCart();
         if ($item->cart_id !== $cart->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['error' => 'Tidak diizinkan'], 403);
         }
         
         $data = $request->validate(['qty' => 'required|integer|min:1']);
@@ -96,10 +106,10 @@ class CartController extends Controller
      */
     public function removeItem(CartItem $item)
     {
-        // Verifikasi item milik pengguna
+        // Verifikasi item milik user
         $cart = $this->getUserCart();
         if ($item->cart_id !== $cart->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['error' => 'Tidak diizinkan'], 403);
         }
         
         $item->delete();

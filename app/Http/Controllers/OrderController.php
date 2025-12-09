@@ -108,38 +108,48 @@ class OrderController extends Controller
 
     public function index()
     {
-        $orders = Order::where('user_id', Auth::id())->with('items')->latest()->get();
-        $reservations = \App\Models\Reservasi::where('user_id', Auth::id())->latest()->get();
-        return view('orders.index', compact('orders', 'reservations'));
+        try {
+            $orders = Order::where('user_id', Auth::id())->with('items')->latest()->get();
+            $reservations = \App\Models\Reservasi::where('user_id', Auth::id())->latest()->get();
+            return view('orders.index', compact('orders', 'reservations'));
+        } catch (\Exception $e) {
+            \Log::error('Error loading orders: ' . $e->getMessage());
+            return view('orders.index', ['orders' => collect(), 'reservations' => collect()]);
+        }
     }
 
     public function show(Order $order)
     {
-        // Ensure user can only see their own orders
-        if ($order->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
+        try {
+            // Ensure user can only see their own orders
+            if ($order->user_id !== Auth::id()) {
+                abort(403, 'Unauthorized');
+            }
+
+            $order->load('items');
+
+            $qrPayload = json_encode([
+                'order_id' => $order->id,
+                'user_id' => $order->user_id,
+                'total' => $order->total,
+                'status' => $order->status,
+                'created_at' => $order->created_at->toDateTimeString(),
+            ]);
+
+            $orderQr = QrCode::format('svg')
+                ->size(280)
+                ->errorCorrection('H')
+                ->margin(1)
+                ->generate($qrPayload);
+
+            return view('orders.show', [
+                'order' => $order,
+                'orderQr' => $orderQr,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error showing order: ' . $e->getMessage());
+            return redirect()->route('orders.index')->with('error', 'Failed to load order details');
         }
-
-        $order->load('items');
-
-        $qrPayload = json_encode([
-            'order_id' => $order->id,
-            'user_id' => $order->user_id,
-            'total' => $order->total,
-            'status' => $order->status,
-            'created_at' => $order->created_at->toDateTimeString(),
-        ]);
-
-        $orderQr = QrCode::format('svg')
-            ->size(280)
-            ->errorCorrection('H')
-            ->margin(1)
-            ->generate($qrPayload);
-
-        return view('orders.show', [
-            'order' => $order,
-            'orderQr' => $orderQr,
-        ]);
     }
 
     /**

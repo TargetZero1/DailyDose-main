@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -20,24 +21,29 @@ class ProductController extends Controller
     }
 
     /**
-     * Tampilkan detail produk beserta produk terkait
+     * Tampilkan detail produk dengan produk terkait
      * 
      * @param int $id
      * @return \Illuminate\View\View
      */
     public function show($id)
     {
-        $product = Product::findOrFail($id);
-        $relatedProducts = Product::where('category', $product->category)
-            ->where('id', '!=', $product->id)
-            ->take(4)
-            ->get();
+        try {
+            $product = Product::findOrFail($id);
+            $relatedProducts = Product::where('category', $product->category)
+                ->where('id', '!=', $product->id)
+                ->take(4)
+                ->get();
 
-        return view('products.show', compact('product', 'relatedProducts'));
+            return view('products.show', compact('product', 'relatedProducts'));
+        } catch (\Exception $e) {
+            Log::error('Gagal memuat produk: ' . $e->getMessage());
+            return redirect()->route('menu')->with('error', 'Produk tidak ditemukan');
+        }
     }
 
     /**
-     * Dapatkan produk unggulan untuk halaman beranda
+     * Dapatkan produk unggulan untuk halaman utama
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -48,7 +54,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Dapatkan produk baru untuk halaman beranda
+     * Dapatkan produk baru untuk halaman utama
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -59,7 +65,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Dapatkan produk terlaris untuk halaman beranda
+     * Dapatkan produk terlaris untuk halaman utama
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -89,7 +95,7 @@ class ProductController extends Controller
     }
 
     /**
-     * API: Daftar produk untuk frontend menu dalam format JSON
+     * API: Daftar produk untuk menu frontend dalam format JSON
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -102,7 +108,7 @@ class ProductController extends Controller
             'category' => $p->category,
             'harga' => $p->price,
             'gambar' => $p->getImageUrl(),
-            'stock' => $p->stock ?? 'Available',
+            'stock' => $p->stock ?? 'Tersedia',
             'description' => $p->description ?? '',
             'is_new' => (bool) ($p->is_new ?? false),
         ]);

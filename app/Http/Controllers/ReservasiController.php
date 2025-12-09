@@ -76,55 +76,60 @@ class ReservasiController extends Controller
 
     public function store(Request $request)
     {
-        // Prevent admins from making reservations
-        if (Auth::check() && (Auth::user()->role === 'admin' || Auth::user()->role === 'pemilik')) {
-            return back()->with('error', 'Admins cannot make reservations');
+        try {
+            // Prevent admins from making reservations
+            if (Auth::check() && (Auth::user()->role === 'admin' || Auth::user()->role === 'pemilik')) {
+                return back()->with('error', 'Admins cannot make reservations');
+            }
+
+            $request->validate([
+                'nama' => 'required|string',
+                'no_hp' => 'required|string',
+                'tanggal' => 'required|date',
+                'waktu' => 'required',
+                'jumlah' => 'required|integer|min:1',
+                'area' => 'required|string|in:Indoor,Outdoor,VIP Room',
+            ]);
+
+            // Check capacity before creating reservation
+            $date = $request->tanggal;
+            $area = $request->area;
+            $requestedGuests = (int)$request->jumlah;
+            $capacity = $this->areaCapacities[$area] ?? 50;
+
+            // Count existing reservations for this date, time, and area
+            $existingReservations = Reservasi::where('tanggal', $date)
+                ->where('area', $area)
+                ->where('waktu', $request->waktu)
+                ->sum('jumlah');
+
+            $totalGuests = $existingReservations + $requestedGuests;
+
+            // Reject if over capacity
+            if ($totalGuests > $capacity) {
+                $remaining = $capacity - $existingReservations;
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'capacity' => "This time slot is fully booked. {$capacity} people max for {$area}, but {$existingReservations} are already reserved. You can only add {$remaining} more guests."
+                    ]);
+            }
+
+            $reservasi = Reservasi::create([
+                'nama'    => $request->nama,
+                'no_hp'   => $request->no_hp,
+                'tanggal' => $request->tanggal,
+                'waktu'   => $request->waktu,
+                'jumlah'  => $request->jumlah,
+                'area'    => $request->area,
+                'user_id' => Auth::id(),
+            ]);
+
+            return redirect()->route('reservasi.confirmation', $reservasi->id);
+        } catch (\Exception $e) {
+            \Log::error('Error creating reservation: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create reservation. Please try again.');
         }
-
-        $request->validate([
-            'nama' => 'required|string',
-            'no_hp' => 'required|string',
-            'tanggal' => 'required|date',
-            'waktu' => 'required',
-            'jumlah' => 'required|integer|min:1',
-            'area' => 'required|string|in:Indoor,Outdoor,VIP Room',
-        ]);
-
-        // Check capacity before creating reservation
-        $date = $request->tanggal;
-        $area = $request->area;
-        $requestedGuests = (int)$request->jumlah;
-        $capacity = $this->areaCapacities[$area] ?? 50;
-
-        // Count existing reservations for this date, time, and area
-        $existingReservations = Reservasi::where('tanggal', $date)
-            ->where('area', $area)
-            ->where('waktu', $request->waktu)
-            ->sum('jumlah');
-
-        $totalGuests = $existingReservations + $requestedGuests;
-
-        // Reject if over capacity
-        if ($totalGuests > $capacity) {
-            $remaining = $capacity - $existingReservations;
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'capacity' => "This time slot is fully booked. {$capacity} people max for {$area}, but {$existingReservations} are already reserved. You can only add {$remaining} more guests."
-                ]);
-        }
-
-        $reservasi = Reservasi::create([
-            'nama'    => $request->nama,
-            'no_hp'   => $request->no_hp,
-            'tanggal' => $request->tanggal,
-            'waktu'   => $request->waktu,
-            'jumlah'  => $request->jumlah,
-            'area'    => $request->area,
-            'user_id' => Auth::id(),
-        ]);
-
-        return redirect()->route('reservasi.confirmation', $reservasi->id);
     }
 
     public function confirmation(Reservasi $reservasi)
@@ -173,26 +178,36 @@ class ReservasiController extends Controller
 
     public function update(Request $request, Reservasi $reservasi)
     {
-        $request->validate([
-            'nama' => 'required|string',
-            'no_hp' => 'required|string',
-            'tanggal' => 'required|date',
-            'waktu' => 'required',
-            'jumlah' => 'required|integer|min:1',
-            'area' => 'required|string',
-        ]);
+        try {
+            $request->validate([
+                'nama' => 'required|string',
+                'no_hp' => 'required|string',
+                'tanggal' => 'required|date',
+                'waktu' => 'required',
+                'jumlah' => 'required|integer|min:1',
+                'area' => 'required|string',
+            ]);
 
-        $reservasi->update($request->only(['nama', 'no_hp', 'tanggal', 'waktu', 'jumlah', 'area']));
+            $reservasi->update($request->only(['nama', 'no_hp', 'tanggal', 'waktu', 'jumlah', 'area']));
 
-        return redirect()->route('reservasi.show', $reservasi)
-                         ->with('success', 'Reservasi berhasil diperbarui!');
+            return redirect()->route('reservasi.show', $reservasi)
+                             ->with('success', 'Reservasi berhasil diperbarui!');
+        } catch (\Exception $e) {
+            \Log::error('Error updating reservation: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update reservation.');
+        }
     }
 
     public function destroy(Reservasi $reservasi)
     {
-        $reservasi->delete();
+        try {
+            $reservasi->delete();
 
-        return redirect()->route('menu')
-                         ->with('success', 'Reservasi berhasil dihapus!');
+            return redirect()->route('menu')
+                             ->with('success', 'Reservasi berhasil dihapus!');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting reservation: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete reservation.');
+        }
     }
 }

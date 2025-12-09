@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\{Auth, Log};
 
 class LoginController extends Controller
 {
@@ -15,31 +15,39 @@ class LoginController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
+        try {
+            $request->validate([
+                'username' => 'required|string',
+                'password' => 'required|string',
+            ]);
 
-        $credentials = $request->only('username', 'password');
-        $remember = $request->has('remember');
+            $credentials = $request->only('username', 'password');
+            $remember = $request->has('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            
-            $user = Auth::user();
-            $welcomeMessage = "Welcome back, {$user->username}!";
-            
-            // Redirect berdasarkan role jika diperlukan di masa depan
-            if (in_array($user->role, ['admin', 'pemilik'])) {
+            if (Auth::attempt($credentials, $remember)) {
+                // Regenerasi session untuk keamanan
+                $request->session()->regenerate();
+                
+                $user = Auth::user();
+                $welcomeMessage = "Selamat datang kembali, {$user->username}!";
+                
+                // Redirect berdasarkan role jika diperlukan
+                if (in_array($user->role, ['admin', 'pemilik'])) {
+                    return redirect()->intended(route('home'))->with('success', $welcomeMessage);
+                }
+                
                 return redirect()->intended(route('home'))->with('success', $welcomeMessage);
             }
-            
-            return redirect()->intended(route('home'))->with('success', $welcomeMessage);
-        }
 
-        return back()->withErrors([
-            'username' => 'The provided credentials do not match our records.',
-        ])->withInput($request->only('username'));
+            return back()->withErrors([
+                'username' => 'Username atau password tidak sesuai.',
+            ])->withInput($request->only('username'));
+        } catch (\Exception $e) {
+            Log::error('Gagal login: ' . $e->getMessage());
+            return back()->withErrors([
+                'username' => 'Terjadi kesalahan saat login. Coba lagi.',
+            ])->withInput($request->only('username'));
+        }
     }
     
     /**
@@ -52,9 +60,11 @@ class LoginController extends Controller
     {
         Auth::logout();
         
+        // Invalidasi session
         $request->session()->invalidate();
+        // Regenerasi token CSRF
         $request->session()->regenerateToken();
         
-        return redirect()->route('home')->with('success', 'Logged out successfully. See you soon!');
+        return redirect()->route('home')->with('success', 'Berhasil logout!');
     }
 }
