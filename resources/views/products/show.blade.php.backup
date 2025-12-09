@@ -1,0 +1,393 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-1">
+                @php
+                    $productImage = asset('img/placeholder.png');
+                    if (!empty($product->image)) {
+                        if (\Illuminate\Support\Str::startsWith($product->image, 'img/') || file_exists(public_path($product->image))) {
+                            $productImage = asset($product->image);
+                        } else {
+                            $productImage = asset('storage/' . $product->image);
+                        }
+                    }
+                @endphp
+                <img src="{{ $productImage }}" alt="{{ $product->name }}" class="w-full h-64 object-cover rounded-lg">
+            <div class="mt-4">
+                <span class="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">{{ $product->category }}</span>
+                <div class="mt-2">
+                    <span id="stock-status" class="text-sm font-semibold"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:col-span-2">
+            <h1 class="text-2xl font-bold">{{ $product->name }}</h1>
+            <div class="text-amber-700 text-2xl font-bold mt-2">Rp. {{ number_format($product->getFinalPrice()) }}</div>
+            <p class="text-gray-700 mt-4">{{ $product->description }}</p>
+            {{-- Variant selection / customization --}}
+            <div class="mt-4">
+                <label class="font-semibold">Customize</label>
+                <div class="mt-2" id="variant-groups">
+                    @foreach($product->variants->groupBy('type') as $type => $variants)
+                        <div class="mb-3">
+                            <div class="text-sm font-medium text-gray-600 mb-1">{{ ucfirst($type) }}</div>
+                            <div class="flex gap-2 flex-wrap" data-variant-type="{{ $type }}">
+                                @foreach($variants as $variant)
+                                    <button type="button" data-variant-id="{{ $variant->id }}" data-variant-type="{{ $variant->type }}" data-price-modifier="{{ $variant->price_modifier }}" class="variant-btn px-3 py-1 border rounded {{ $variant->stock==0?'opacity-40 cursor-not-allowed':'' }}">{{ $variant->value }}@if($variant->price_modifier)> +Rp.{{ number_format($variant->price_modifier) }}@endif</button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-4 flex items-center gap-4">
+                    <div>
+                        <div class="text-sm font-medium text-gray-600 mb-1">Quantity</div>
+                        <div class="flex items-center gap-2">
+                            <button id="qty-decrease" class="px-3 py-1 border rounded">-</button>
+                            <input id="qty-input" type="number" min="1" value="1" class="w-16 text-center p-1 border rounded">
+                            <button id="qty-increase" class="px-3 py-1 border rounded">+</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-medium text-gray-600 mb-1">Subtotal</div>
+                        <div id="subtotal" class="text-amber-700 font-bold text-xl">Rp. {{ number_format($product->getFinalPrice()) }}</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex gap-3 flex-wrap">
+                    <button id="add-to-cart" class="px-4 py-3 bg-amber-700 text-white rounded-lg">Add to Cart</button>
+                    <button id="order-btn" class="px-4 py-3 bg-green-600 text-white rounded-lg">Order via WhatsApp</button>
+                    @auth
+                        <button id="save-custom-btn" type="button" class="px-4 py-3 bg-blue-600 text-white rounded-lg">Save Customization</button>
+                    @endauth
+                    <button id="favorite-btn" class="px-4 py-3 border rounded-lg flex items-center gap-2">
+                        <i id="favorite-icon" class="fa-regular fa-heart text-amber-700"></i>
+                        <span id="favorite-text">Add to Wishlist</span>
+                    </button>
+                </div>
+            </div>
+
+            <hr class="my-6">
+
+            {{-- Reviews --}}
+            <div id="reviews-root">
+                <h3 class="text-xl font-bold mb-2">Reviews (<span id="reviews-count">{{ $product->getReviewCount() }}</span>)</h3>
+                <div id="reviews-list" class="space-y-4 mb-4">
+                    @foreach($product->reviews()->with('user')->latest()->limit(10)->get() as $rev)
+                        <div class="border rounded p-3">
+                            <div class="flex justify-between">
+                                <div class="font-semibold">{{ $rev->user->username }}</div>
+                                <div class="text-sm text-gray-600">{{ $rev->created_at->format('d M Y') }}</div>
+                            </div>
+                            <div class="text-amber-700 font-bold mt-1">{{ str_repeat('★', $rev->rating) }}{{ str_repeat('☆', 5-$rev->rating) }}</div>
+                            <p class="mt-2 text-gray-700">{{ $rev->comment }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                @auth
+                    <form id="review-form" class="space-y-3">
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <div>
+                            <label class="font-medium">Rating</label>
+                            <select name="rating" id="rating" class="mt-1 p-2 border rounded">
+                                <option value="5">5 - Excellent</option>
+                                <option value="4">4 - Very Good</option>
+                                <option value="3">3 - Good</option>
+                                <option value="2">2 - Fair</option>
+                                <option value="1">1 - Poor</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-medium">Comment</label>
+                            <textarea name="comment" rows="3" class="w-full p-2 border rounded" placeholder="Share your experience..."></textarea>
+                        </div>
+                        <div>
+                            <button type="submit" class="px-4 py-2 bg-amber-700 text-white rounded">Submit Review</button>
+                        </div>
+                    </form>
+                @else
+                    <div class="text-gray-500">Please <a href="{{ route('login') }}" class="text-amber-700">login</a> to leave a review.</div>
+                @endauth
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Customization Modal -->
+<div id="save-custom-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+        <h2 class="text-2xl font-bold mb-4">Save Customization</h2>
+        <p class="text-gray-600 mb-4">Save this customization as a template for quick reordering.</p>
+        <form id="save-custom-form" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block font-medium mb-1">Customization Name</label>
+                <input type="text" id="custom-name" name="name" placeholder="e.g., My Favorite Config" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="flex-1 px-4 py-2 border rounded-lg" onclick="document.getElementById('save-custom-modal').classList.add('hidden')">Cancel</button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const productId = {{ $product->id }};
+    const csrfToken = '{{ csrf_token() }}';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Stock status
+        const stockEl = document.getElementById('stock-status');
+        if ({{ $product->isInStock() ? 'true' : 'false' }}) {
+            stockEl.textContent = 'In Stock';
+            stockEl.className = 'text-green-600 font-semibold';
+        } else {
+            stockEl.textContent = 'Out of Stock';
+            stockEl.className = 'text-red-600 font-semibold';
+            document.getElementById('add-to-cart').disabled = true;
+        }
+
+        // Favorite state (only call server if authenticated)
+        const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+        if (isAuthenticated) {
+            fetch('/favorites/check/' + productId)
+                .then(r => r.json())
+                .then(data => {
+                    setFavoriteState(!!data.is_favorited);
+                });
+
+            document.getElementById('favorite-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                fetch('/products/' + productId + '/favorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                }).then(r => r.json())
+                .then(data => {
+                    setFavoriteState(data.status === 'added');
+                });
+            });
+        } else {
+            // guests: fallback to localStorage behaviour
+            const storedFavs = JSON.parse(localStorage.getItem('menu_favorites') || '[]');
+            if (storedFavs.includes(productId.toString())) {
+                setFavoriteState(true);
+            }
+            document.getElementById('favorite-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                let favs = JSON.parse(localStorage.getItem('menu_favorites') || '[]');
+                if (favs.includes(productId.toString())) {
+                    favs = favs.filter(x => x !== productId.toString());
+                    setFavoriteState(false);
+                } else {
+                    favs.push(productId.toString());
+                    setFavoriteState(true);
+                }
+                localStorage.setItem('menu_favorites', JSON.stringify(favs));
+            });
+        }
+
+        // Review submit
+        const reviewForm = document.getElementById('review-form');
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(reviewForm);
+                fetch('/reviews', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    body: formData
+                }).then(r => {
+                    if (r.redirected) {
+                        window.location.reload();
+                    }
+                    return r.json().catch(()=>{});
+                }).catch(()=>{ window.location.reload(); });
+            });
+        }
+
+        // Variants data for client-side price calculations
+        const variantsData = @json($product->variants->map(function($v){ return ['id'=>$v->id,'type'=>$v->type,'value'=>$v->value,'price_modifier'=>$v->price_modifier]; }));
+
+        // Variant selection and price calc
+        let selectedVariants = {}; // keyed by type => variant object
+        function calculateSubtotal() {
+            const base = {{ $product->getFinalPrice() }};
+            let extra = 0;
+            Object.values(selectedVariants).forEach(v => { if (v && v.price_modifier) extra += Number(v.price_modifier); });
+            const qty = Number(document.getElementById('qty-input').value || 1);
+            const subtotal = (base + extra) * qty;
+            document.getElementById('subtotal').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits:0 }).format(subtotal);
+            return subtotal;
+        }
+
+        document.querySelectorAll('.variant-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (btn.classList.contains('cursor-not-allowed')) return;
+                const type = btn.getAttribute('data-variant-type');
+                // Deselect other buttons of same type
+                document.querySelectorAll('[data-variant-type="' + type + '"]').forEach(b => b.classList.remove('bg-amber-700','text-white'));
+                btn.classList.add('bg-amber-700','text-white');
+                const vid = Number(btn.getAttribute('data-variant-id'));
+                const found = variantsData.find(v => v.id === vid);
+                selectedVariants[type] = found || null;
+                calculateSubtotal();
+            });
+        });
+
+        // Quantity controls
+        document.getElementById('qty-decrease').addEventListener('click', () => {
+            const input = document.getElementById('qty-input');
+            let v = Number(input.value) || 1; if (v>1) v--; input.value = v; calculateSubtotal();
+        });
+        document.getElementById('qty-increase').addEventListener('click', () => {
+            const input = document.getElementById('qty-input'); let v = Number(input.value) || 1; v++; input.value = v; calculateSubtotal();
+        });
+        document.getElementById('qty-input').addEventListener('change', () => { if (Number(document.getElementById('qty-input').value) < 1) document.getElementById('qty-input').value = 1; calculateSubtotal(); });
+
+        // Save Customization button and form
+        @auth
+        const saveCustomBtn = document.getElementById('save-custom-btn');
+        if (saveCustomBtn) {
+            saveCustomBtn.addEventListener('click', () => {
+                document.getElementById('save-custom-modal').classList.remove('hidden');
+            });
+        }
+
+        const saveCustomForm = document.getElementById('save-custom-form');
+        if (saveCustomForm) {
+            saveCustomForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('custom-name').value;
+                const selected = Object.values(selectedVariants).filter(Boolean).map(v => ({ type: v.type, value: v.value, price_modifier: v.price_modifier }));
+                
+                try {
+                    const resp = await fetch('{{ route('customizations.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ product_id: productId, name: name, options: selected })
+                    });
+                    if (resp.ok) {
+                        alert('Customization saved as template!');
+                        document.getElementById('save-custom-modal').classList.add('hidden');
+                        document.getElementById('custom-name').value = '';
+                    } else {
+                        alert('Failed to save customization');
+                    }
+                } catch (err) {
+                    console.error('Error saving customization', err);
+                    alert('Error saving customization');
+                }
+            });
+        }
+        @endauth
+
+        // Add to cart with options
+        document.getElementById('add-to-cart').addEventListener('click', async () => {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const qty = Number(document.getElementById('qty-input').value || 1);
+            const selected = Object.values(selectedVariants).filter(Boolean).map(v => ({ type: v.type, value: v.value, price_modifier: v.price_modifier }));
+            const subtotal = calculateSubtotal();
+            const item = {
+                product_id: productId,
+                name: '{{ addslashes($product->name) }}',
+                base_price: {{ $product->getFinalPrice() }},
+                options: selected,
+                qty: qty,
+                subtotal: subtotal,
+                customization_id: null
+            };
+
+            // If user is authenticated, persist customization to DB and store id
+            if (isAuthenticated) {
+                try {
+                    const resp = await fetch('{{ route('customizations.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ product_id: productId, name: `${item.name} - ${new Date().toLocaleString()}`, options: item.options })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        item.customization_id = data.customization.id;
+                    }
+                } catch (err) {
+                    console.warn('Failed to save customization to server', err);
+                }
+            }
+
+            if (isAuthenticated) {
+                // send to server-side cart
+                try {
+                    const resp = await fetch('{{ route('cart.items.add') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(item)
+                    });
+                    if (resp.ok) {
+                        alert('Added to server-side cart');
+                    } else {
+                        // fallback to localStorage
+                        cart.push(item);
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        alert('Added to cart (local fallback)');
+                    }
+                } catch (err) {
+                    console.warn('Failed to add to server cart', err);
+                    cart.push(item);
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    alert('Added to cart (local fallback)');
+                }
+            } else {
+                cart.push(item);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                alert('Added to cart');
+            }
+        });
+
+        // Order via WhatsApp button
+        document.getElementById('order-btn').addEventListener('click', () => {
+            const qty = Number(document.getElementById('qty-input').value || 1);
+            const selected = Object.values(selectedVariants).filter(Boolean).map(v => `${v.type}: ${v.value}`);
+            const subtotal = calculateSubtotal();
+            const message = `Hello, I'd like to order:${encodeURIComponent('\n')}- {{ addslashes($product->name) }} x${qty}${selected.length? encodeURIComponent('\n') + selected.join(', '): ''}${encodeURIComponent('\n')}Total: Rp. ${subtotal.toLocaleString('id-ID')}`;
+            // WhatsApp API link (opens chat with number); replace number as needed
+            const number = '088009759102';
+            const waLink = `https://api.whatsapp.com/send?phone=${number}&text=${message}`;
+            // Open in new tab
+            window.open(waLink, '_blank');
+        });
+    });
+
+    function setFavoriteState(isFavorited) {
+        const icon = document.getElementById('favorite-icon');
+        const text = document.getElementById('favorite-text');
+        if (isFavorited) {
+            icon.className = 'fa-solid fa-heart text-red-500';
+            text.textContent = 'Favorited';
+        } else {
+            icon.className = 'fa-regular fa-heart text-amber-700';
+            text.textContent = 'Add to Wishlist';
+        }
+    }
+</script>
+
+@endsection
