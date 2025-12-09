@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Product;
-use App\Models\ProductVariant;
+use Illuminate\Support\Facades\Log;
 
 class VariantController extends Controller
 {
@@ -18,24 +18,29 @@ class VariantController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorizeAdmin();
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'type' => 'required|string',
-            'value' => 'required|string',
-            'price_modifier' => 'nullable|integer',
-            'stock' => 'nullable|integer',
-        ]);
+        try {
+            $this->authorizeAdmin();
+            $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'type' => 'required|string',
+                'value' => 'required|string',
+                'price_modifier' => 'nullable|integer',
+                'stock' => 'nullable|integer',
+            ]);
 
-        ProductVariant::create([
-            'product_id' => $request->product_id,
-            'type' => $request->type,
-            'value' => $request->value,
-            'price_modifier' => $request->price_modifier ?? 0,
-            'stock' => $request->stock ?? 0,
-        ]);
+            ProductVariant::create([
+                'product_id' => $request->product_id,
+                'type' => $request->type,
+                'value' => $request->value,
+                'price_modifier' => $request->price_modifier ?? 0,
+                'stock' => $request->stock ?? 0,
+            ]);
 
-        return back()->with('success', 'Variant added');
+            return back()->with('success', 'Varian berhasil ditambahkan');
+        } catch (\Exception $e) {
+            Log::error('Gagal tambah varian: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menambah varian');
+        }
     }
 
     public function destroy(ProductVariant $variant)
@@ -54,24 +59,29 @@ class VariantController extends Controller
 
     public function update(Request $request, ProductVariant $variant)
     {
-        $this->authorizeAdmin();
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'type' => 'required|string',
-            'value' => 'required|string',
-            'price_modifier' => 'nullable|integer',
-            'stock' => 'nullable|integer',
-        ]);
+        try {
+            $this->authorizeAdmin();
+            $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'type' => 'required|string',
+                'value' => 'required|string',
+                'price_modifier' => 'nullable|integer',
+                'stock' => 'nullable|integer',
+            ]);
 
-        $variant->update([
-            'product_id' => $request->product_id,
-            'type' => $request->type,
-            'value' => $request->value,
-            'price_modifier' => $request->price_modifier ?? 0,
-            'stock' => $request->stock ?? 0,
-        ]);
+            $variant->update([
+                'product_id' => $request->product_id,
+                'type' => $request->type,
+                'value' => $request->value,
+                'price_modifier' => $request->price_modifier ?? 0,
+                'stock' => $request->stock ?? 0,
+            ]);
 
-        return redirect()->route('admin.variants.index')->with('success', 'Variant updated');
+            return redirect()->route('admin.variants.index')->with('success', 'Varian berhasil diperbarui');
+        } catch (\Exception $e) {
+            Log::error('Gagal update varian: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memperbarui varian');
+        }
     }
 
     protected function authorizeAdmin()
