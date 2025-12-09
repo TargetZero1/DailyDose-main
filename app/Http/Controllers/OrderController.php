@@ -109,11 +109,13 @@ class OrderController extends Controller
     public function index()
     {
         try {
+            // Ambil pesanan user yang login dengan item terkaitnya
             $orders = Order::where('user_id', Auth::id())->with('items')->latest()->get();
+            // Ambil reservasi user yang login
             $reservations = \App\Models\Reservasi::where('user_id', Auth::id())->latest()->get();
             return view('orders.index', compact('orders', 'reservations'));
         } catch (\Exception $e) {
-            \Log::error('Error loading orders: ' . $e->getMessage());
+            \Log::error('Gagal memuat pesanan: ' . $e->getMessage());
             return view('orders.index', ['orders' => collect(), 'reservations' => collect()]);
         }
     }
@@ -121,13 +123,14 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         try {
-            // Ensure user can only see their own orders
+            // Verifikasi user hanya bisa melihat pesanan mereka sendiri
             if ($order->user_id !== Auth::id()) {
-                abort(403, 'Unauthorized');
+                abort(403, 'Tidak diizinkan');
             }
 
             $order->load('items');
 
+            // Buat QR code untuk pesanan
             $qrPayload = json_encode([
                 'order_id' => $order->id,
                 'user_id' => $order->user_id,
@@ -147,13 +150,13 @@ class OrderController extends Controller
                 'orderQr' => $orderQr,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error showing order: ' . $e->getMessage());
-            return redirect()->route('orders.index')->with('error', 'Failed to load order details');
+            \Log::error('Gagal menampilkan pesanan: ' . $e->getMessage());
+            return redirect()->route('orders.index')->with('error', 'Gagal memuat detail pesanan');
         }
     }
 
     /**
-     * Show order confirmation page after placement.
+     * Tampilkan halaman konfirmasi pesanan setelah dibuat
      */
     public function confirmation(Order $order)
     {
