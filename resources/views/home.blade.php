@@ -196,7 +196,7 @@
                 <div class="product-preview shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2">
                     <a href="{{ route('products.show', $product->id) }}" class="block" style="text-decoration: none;">
                         <div style="position: relative; width: 100%; height: 240px; background: linear-gradient(135deg, #fef3e2 0%, #fae9d0 100%); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; object-position: center;" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                            <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; object-position: center;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect width=%22400%22 height=%22300%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%236b7280%22%3ENo Image%3C/text%3E%3C/svg%3E'">
                             <div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #d4a574 0%, #8b6f47 100%); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
                                 <i class="fas fa-star" style="margin-right: 4px;"></i>Featured
                             </div>

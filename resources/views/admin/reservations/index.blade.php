@@ -224,6 +224,137 @@
     }
 </style>
 
+<script>
+    function confirmReservation(id) {
+        const card = document.querySelector(`[data-reservation-id="${id}"]`);
+        
+        fetch(`/admin/reservations/${id}/confirm`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show toast notification
+                Toast.success('Success', 'Reservation confirmed successfully');
+                
+                // Update UI in real-time
+                updateReservationCard(id, 'confirmed');
+                
+                // Update stats counter
+                updateStatsCounters();
+            } else {
+                Toast.error('Error', data.message || 'Failed to confirm reservation');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Toast.error('Error', 'Failed to confirm reservation');
+        });
+    }
+
+    function cancelReservation(id) {
+        if (!confirm('Cancel this reservation? This action cannot be undone.')) {
+            return;
+        }
+        
+        const card = document.querySelector(`[data-reservation-id="${id}"]`);
+        
+        fetch(`/admin/reservations/${id}/cancel`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show toast notification
+                Toast.success('Success', 'Reservation cancelled successfully');
+                
+                // Update UI in real-time
+                updateReservationCard(id, 'cancelled');
+                
+                // Update stats counter
+                updateStatsCounters();
+            } else {
+                Toast.error('Error', data.message || 'Failed to cancel reservation');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Toast.error('Error', 'Failed to cancel reservation');
+        });
+    }
+
+    function updateReservationCard(id, newStatus) {
+        const card = document.querySelector(`[data-reservation-id="${id}"]`);
+        if (!card) return;
+
+        // Update status badge
+        const statusBadge = card.querySelector('.status-badge');
+        if (statusBadge) {
+            statusBadge.className = 'status-badge status-' + newStatus;
+            statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+        }
+
+        // Update action buttons
+        const confirmBtn = card.querySelector('.btn-confirm');
+        const cancelBtn = card.querySelector('.btn-cancel');
+        
+        if (newStatus === 'confirmed' && confirmBtn) {
+            confirmBtn.remove();
+        }
+        
+        if (newStatus === 'cancelled' && cancelBtn) {
+            cancelBtn.remove();
+        }
+
+        // Add animation
+        card.style.transition = 'all 0.3s ease';
+        card.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            card.style.transform = 'scale(1)';
+        }, 150);
+    }
+
+    function updateStatsCounters() {
+        // Fetch updated stats from server
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Parse the HTML and update stat values
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const statsCards = ['Total Reservations', 'Confirmed', 'Pending', 'Total Guests'];
+            statsCards.forEach(label => {
+                const newStat = doc.querySelector(`.stat-label:contains("${label}")`);
+                const currentStat = document.querySelector(`.stat-label:contains("${label}")`);
+                
+                if (newStat && currentStat) {
+                    const newValue = newStat.nextElementSibling?.textContent;
+                    const currentValue = currentStat.nextElementSibling;
+                    if (newValue && currentValue) {
+                        currentValue.textContent = newValue;
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error updating stats:', error));
+    }
+</script>
+
 <div class="admin-header">
     <div class="container mx-auto px-4">
         <h1 class="text-4xl font-black mb-2">Reservations Management</h1>
@@ -256,7 +387,7 @@
         <!-- Filter Section -->
         <div class="filter-section">
             <h3 class="font-bold text-lg mb-4 text-gray-800"><i class="fas fa-sliders-h mr-2"></i>Filter Reservations</h3>
-            <form method="GET" action="{{ route('admin.reservations') }}" class="space-y-4">
+            <form method="GET" action="{{ route('admin.reservations.index') }}" class="space-y-4">
                 <div class="filter-group">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search by name or phone</label>
@@ -292,7 +423,7 @@
                         <button type="submit" class="btn-filter">
                             <i class="fas fa-search"></i> Apply Filters
                         </button>
-                        <a href="{{ route('admin.reservations') }}" class="btn-filter-reset">
+                        <a href="{{ route('admin.reservations.index') }}" class="btn-filter-reset">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -373,145 +504,6 @@
         @endif
     </div>
 </div>
-
-<script>
-    function confirmReservation(id) {
-        const card = document.querySelector(`[data-reservation-id="${id}"]`);
-        
-        fetch(`/admin/reservations/${id}/confirm`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show toast notification
-                if (typeof Toast !== 'undefined') {
-                    Toast.success(data.message);
-                }
-                
-                // Update UI in real-time
-                updateReservationCard(id, 'confirmed');
-                
-                // Update stats counter
-                updateStatsCounters();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            if (typeof Toast !== 'undefined') {
-                Toast.error('Failed to confirm reservation');
-            } else {
-                alert('Failed to confirm reservation');
-            }
-        });
-    }
-
-    function cancelReservation(id) {
-        if (!confirm('Cancel this reservation? This action cannot be undone.')) {
-            return;
-        }
-        
-        const card = document.querySelector(`[data-reservation-id="${id}"]`);
-        
-        fetch(`/admin/reservations/${id}/cancel`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show toast notification
-                if (typeof Toast !== 'undefined') {
-                    Toast.success(data.message);
-                }
-                
-                // Update UI in real-time
-                updateReservationCard(id, 'cancelled');
-                
-                // Update stats counter
-                updateStatsCounters();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            if (typeof Toast !== 'undefined') {
-                Toast.error('Failed to cancel reservation');
-            } else {
-                alert('Failed to cancel reservation');
-            }
-        });
-    }
-
-    function updateReservationCard(id, newStatus) {
-        const card = document.querySelector(`[data-reservation-id="${id}"]`);
-        if (!card) return;
-
-        // Update status badge
-        const statusBadge = card.querySelector('.status-badge');
-        if (statusBadge) {
-            statusBadge.className = 'status-badge status-' + newStatus;
-            statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-        }
-
-        // Update action buttons
-        const confirmBtn = card.querySelector('.btn-confirm');
-        const cancelBtn = card.querySelector('.btn-cancel');
-        
-        if (newStatus === 'confirmed' && confirmBtn) {
-            confirmBtn.remove();
-        }
-        
-        if (newStatus === 'cancelled' && cancelBtn) {
-            cancelBtn.remove();
-        }
-
-        // Add animation
-        card.style.transition = 'all 0.3s ease';
-        card.style.transform = 'scale(0.98)';
-        setTimeout(() => {
-            card.style.transform = 'scale(1)';
-        }, 150);
-    }
-
-    function updateStatsCounters() {
-        // Fetch updated stats from server
-        fetch(window.location.href, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Parse the HTML and update stat values
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            const statsCards = ['Total Reservations', 'Confirmed', 'Pending', 'Total Guests'];
-            statsCards.forEach(label => {
-                const newStat = doc.querySelector(`.stat-label:contains("${label}")`);
-                const currentStat = document.querySelector(`.stat-label:contains("${label}")`);
-                
-                if (newStat && currentStat) {
-                    const newValue = newStat.nextElementSibling?.textContent;
-                    const currentValue = currentStat.nextElementSibling;
-                    if (newValue && currentValue) {
-                        currentValue.textContent = newValue;
-                    }
-                }
-            });
-        })
-        .catch(error => console.error('Error updating stats:', error));
-    }
-</script>
 
 @include('partials.footer')
 

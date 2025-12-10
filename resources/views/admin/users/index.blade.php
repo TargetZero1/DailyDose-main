@@ -266,7 +266,7 @@
         <!-- Filter Section -->
         <div class="filter-section">
             <h3 class="font-bold text-lg mb-4 text-gray-800"><i class="fas fa-sliders-h mr-2"></i>Filter Users</h3>
-            <form method="GET" action="{{ route('admin.users') }}" class="space-y-4">
+            <form method="GET" action="{{ route('admin.users.index') }}" class="space-y-4">
                 <div class="filter-group">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search by name or email</label>
@@ -293,7 +293,7 @@
                         <button type="submit" class="btn-filter">
                             <i class="fas fa-search"></i> Apply Filters
                         </button>
-                        <a href="{{ route('admin.users') }}" class="btn-filter-reset">
+                        <a href="{{ route('admin.users.index') }}" class="btn-filter-reset">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>

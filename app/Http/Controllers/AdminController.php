@@ -124,7 +124,7 @@ class AdminController extends Controller
 
             Product::create($validated);
 
-            return redirect()->route('admin.products')->with('success', 'Produk berhasil dibuat!');
+            return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dibuat!');
         } catch (\Exception $e) {
             \Log::error('Error creating product: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to create product. Please try again.');
@@ -172,7 +172,7 @@ class AdminController extends Controller
 
             $product->update($validated);
 
-            return redirect()->route('admin.products')->with('success', 'Produk berhasil diperbarui!');
+            return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui!');
         } catch (\Exception $e) {
             \Log::error('Error updating product: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Gagal memperbarui produk. Coba lagi.');

@@ -39,6 +39,12 @@ class DatabaseSeeder extends Seeder
         // Seed products
         $this->call(ProductSeeder::class);
         
+        // Seed reservations
+        $this->call(ReservasiSeeder::class);
+        
+        // Seed orders
+        $this->call(OrderSeeder::class);
+        
         // Seed test discounts
         Discount::firstOrCreate(
             ['code' => 'WELCOME10'],

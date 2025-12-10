@@ -326,7 +326,7 @@
                 <a href="{{ route('admin.orders.export') }}" class="btn-export">
                     <i class="fas fa-file-csv"></i> Export CSV
                 </a>
-                <a href="{{ route('admin.analytics') }}" class="btn-filter">
+                <a href="{{ route('admin.analytics.index') }}" class="btn-filter">
                     <i class="fas fa-chart-line"></i> Analytics
                 </a>
             </div>

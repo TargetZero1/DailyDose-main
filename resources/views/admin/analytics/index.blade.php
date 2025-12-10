@@ -204,7 +204,7 @@
         <!-- Date Range Filter -->
         <div class="chart-card">
             <h3 class="text-xl font-bold mb-4 text-gray-800"><i class="fas fa-calendar-alt mr-2"></i>Date Range Filter</h3>
-            <form method="GET" action="{{ route('admin.analytics') }}" class="date-filter">
+            <form method="GET" action="{{ route('admin.analytics.index') }}" class="date-filter">
                 <input type="date" name="start_date" value="{{ request('start_date', date('Y-m-01')) }}" />
                 <input type="date" name="end_date" value="{{ request('end_date', date('Y-m-d')) }}" />
                 <select name="period">

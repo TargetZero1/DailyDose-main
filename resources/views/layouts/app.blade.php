@@ -118,6 +118,11 @@
             const cartCount = document.getElementById('global-cart-count');
             const cartTotal = document.getElementById('global-cart-total');
 
+            // Null check to prevent errors
+            if (!cartItems || !cartCount || !cartTotal) {
+                return;
+            }
+
             // Update count
             const totalItems = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
             cartCount.textContent = totalItems;
@@ -165,12 +170,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
             const totalItems = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
-            document.getElementById('global-cart-count').textContent = totalItems;
+            const cartCountEl = document.getElementById('global-cart-count');
+            if (cartCountEl) {
+                cartCountEl.textContent = totalItems;
+            }
         });
 
         // Listen for cart updates from other scripts
         window.addEventListener('storage', updateGlobalCart);
     </script>
-    @vite('resources/js/app.js')
 </body>
 </html>

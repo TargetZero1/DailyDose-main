@@ -267,7 +267,7 @@
                 <button type="submit" class="btn-submit">
                     <i class="fas fa-save mr-2"></i> Create Product
                 </button>
-                <a href="{{ route('admin.products') }}" class="btn-cancel">
+                <a href="{{ route('admin.products.index') }}" class="btn-cancel">
                     <i class="fas fa-times mr-2"></i> Cancel
                 </a>
             </div>

@@ -45,22 +45,22 @@
                                     <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
                                         <i class="fas fa-chart-line mr-2"></i> Dashboard
                                     </a>
-                                    <a href="{{ route('admin.products') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
+                                    <a href="{{ route('admin.products.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
                                         <i class="fas fa-cube mr-2"></i> Products
                                     </a>
                                     <a href="{{ route('admin.orders.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
                                         <i class="fas fa-receipt mr-2"></i> Orders
                                     </a>
-                                    <a href="{{ route('admin.analytics') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
+                                    <a href="{{ route('admin.analytics.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
                                         <i class="fas fa-chart-bar mr-2"></i> Analytics
                                     </a>
-                                    <a href="{{ route('admin.inventory') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
+                                    <a href="{{ route('admin.inventory.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
                                         <i class="fas fa-warehouse mr-2"></i> Inventory
                                     </a>
-                                    <a href="{{ route('admin.reservations') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
+                                    <a href="{{ route('admin.reservations.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
                                         <i class="fas fa-calendar-check mr-2"></i> Reservations
                                     </a>
-                                    <a href="{{ route('admin.users') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
+                                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition text-sm">
                                         <i class="fas fa-users mr-2"></i> Users
                                     </a>
                                 </div>

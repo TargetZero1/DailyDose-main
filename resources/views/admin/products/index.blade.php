@@ -284,7 +284,7 @@
         <!-- Filter Section -->
         <div class="filter-section">
             <h3 class="font-bold text-lg mb-4 text-gray-800"><i class="fas fa-sliders-h mr-2"></i>Advanced Filters</h3>
-            <form method="GET" action="{{ route('admin.products') }}" class="space-y-4">
+            <form method="GET" action="{{ route('admin.products.index') }}" class="space-y-4">
                 <div class="filter-group">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search by name</label>
@@ -322,7 +322,7 @@
                         <button type="submit" class="btn-filter">
                             <i class="fas fa-search"></i> Apply Filters
                         </button>
-                        <a href="{{ route('admin.products') }}" class="btn-filter-reset">
+                        <a href="{{ route('admin.products.index') }}" class="btn-filter-reset">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -342,7 +342,7 @@
                     <div class="product-info">
                         <div class="product-image">
                             @if($product->image)
-                                <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" onerror="this.src='https://via.placeholder.com/80x80?text=No+Image'">
+                                <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%228%22 fill=%22%236b7280%22%3ENo Image%3C/text%3E%3C/svg%3E'">
                             @else
                                 <i class="fas fa-image text-gray-400 text-2xl"></i>
                             @endif

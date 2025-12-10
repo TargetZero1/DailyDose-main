@@ -84,16 +84,16 @@
             <a href="{{ route('admin.dashboard') }}" class="!bg-amber-700 !text-white">
                 <i class="fas fa-chart-line mr-2"></i> Dashboard
             </a>
-            <a href="{{ route('admin.products') }}">
+            <a href="{{ route('admin.products.index') }}">
                 <i class="fas fa-cube mr-2"></i> Products
             </a>
             <a href="{{ route('admin.orders.index') }}">
                 <i class="fas fa-receipt mr-2"></i> Orders
             </a>
-            <a href="{{ route('admin.reservations') }}">
+            <a href="{{ route('admin.reservations.index') }}">
                 <i class="fas fa-calendar-check mr-2"></i> Reservations
             </a>
-            <a href="{{ route('admin.users') }}">
+            <a href="{{ route('admin.users.index') }}">
                 <i class="fas fa-users mr-2"></i> Users
             </a>
         </div>

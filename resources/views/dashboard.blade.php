@@ -106,7 +106,7 @@
                     <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition transform hover:scale-105">
                         <a href="{{ route('products.show', $product->id) }}" class="block">
                             <div class="h-48 flex items-center justify-center" style="background: linear-gradient(135deg, {{ ['#fbbf24, #f59e0b', '#ec4899, #be185d', '#fbbf24, #d97706'][($loop->index) % 3] }});">
-                                <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                                <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect width=%22400%22 height=%22300%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%236b7280%22%3ENo Image%3C/text%3E%3C/svg%3E'">
                             </div>
                         </a>
                         <div class="p-6">

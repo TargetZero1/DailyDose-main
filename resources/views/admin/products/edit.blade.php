@@ -241,7 +241,7 @@
                 @if($product->image)
                     <div class="product-preview">
                         <p class="text-sm font-semibold text-gray-700 mb-2">Current Image:</p>
-                        <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+                        <img src="{{ $product->getImageUrl() }}" alt="{{ $product->name }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2212%22 fill=%22%236b7280%22%3ENo Image%3C/text%3E%3C/svg%3E'">>
                     </div>
                 @endif
                 <input 
@@ -287,7 +287,7 @@
                 <button type="submit" class="btn-submit">
                     <i class="fas fa-save mr-2"></i> Update Product
                 </button>
-                <a href="{{ route('admin.products') }}" class="btn-cancel">
+                <a href="{{ route('admin.products.index') }}" class="btn-cancel">
                     <i class="fas fa-times mr-2"></i> Cancel
                 </a>
             </div>
